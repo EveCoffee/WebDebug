@@ -1,19 +1,27 @@
-"use strict";
 /**
  * Created by coffee on 9/4/16.
  */
 const url = require("url");
+
 /**
  * Debug模块
  */
-class Debug {
-    constructor() {
+export default class Debug{
+    private record;
+
+    constructor(){
+
         // 记录的网络请求
         this.record = [];
+
     }
-    log(req) {
-        var { href, pathname, protocol, hostname, port, path, search, hash } = url.parse(req.originalUrl);
+
+    log(req){
+
+        var {href, pathname, protocol, hostname, port, path, search, hash} = url.parse(req.originalUrl);
+
         console.log(href);
+
         this.record.push({
             protocol: protocol,
             host: hostname,
@@ -24,7 +32,5 @@ class Debug {
             headers: req.headers
         });
     }
+
 }
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.default = Debug;
-//# sourceMappingURL=log.js.map
