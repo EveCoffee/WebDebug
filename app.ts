@@ -24,12 +24,15 @@ var proxy = httpProxy.createProxyServer({});
 
 var app = express();
 
+console.log("好像调试前会进行自动编译呀， 好神奇呀")
 
 app.all("*", function (req, res) {
 
     debug.log(req);
 
-    let {protocol, auth, host, pathname} = url.parse(req.originalUrl);
+    let {protocol, auth, host, pathname, port} = url.parse(req.originalUrl);
+
+    port = port || 80;
 
     // 遍历映射目录, 如果存在则直接进行映射目录替换
     for (let mapReg of Object.keys(config.mapping)){
@@ -66,7 +69,9 @@ app.all("*", function (req, res) {
         console.log("api请求");
     }
 
-    // coffeeProxy;
+    coffeeProxy.web(req, res, {
+        target: `${protocol}//${host}:${port}`,
+    });
 
     proxy.web(req, res, {
         target: `${protocol}//${host}`
