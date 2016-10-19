@@ -5,8 +5,5 @@
     "outDir": "build",
     "sourceMap": true,
     "types": ["node"]
-  },
-  "exclude": [
-    "node_modules"
-  ]
+  }
 }
