@@ -2,11 +2,13 @@ import Debug from "./modules/log";
 import coffeeProxy from "./modules/proxy";
 import hosts from "./api/hosts";
 
-import * as http from "http";
+import * as Http from "http";
 import * as fs from "fs";
 import * as path from "path";
 import * as express from "express";
 import * as url from "url";
+import * as socketIO from "socket.io";
+
 
 var httpProxy = require("http-proxy");
 
@@ -15,18 +17,12 @@ var config = require("./config");
 
 var debug = new Debug();
 
-//
-// Create a proxy server with custom application logic
-//
-var proxy = httpProxy.createProxyServer({});
-
-var app = express();
-
-console.log("好像调试前会进行自动编译呀， 好神奇呀");
+var app = express(),
+    http = require("http").Server(app),
+    io = socketIO(http),
+    socket:SocketIO.Socket = null;
 
 app.all("*", function (req, res) {
-
-    debug.log(req);
 
     let {protocol, auth, host, pathname, port} = url.parse(req.originalUrl);
 
@@ -54,15 +50,35 @@ app.all("*", function (req, res) {
 
     }
 
-    coffeeProxy.web(req, res, {
-        target: `${protocol}//${host}:${port}`,
-    });
+    coffeeProxy.web(req, res, (header, statusCode, body) => {
+        debug.log(req.headers, header, statusCode, body);
 
+        socket.emit("record", {
+            status: 0,
+            message: "有数据过来了，别偷懒",
+            record: {
+                requestHeader: req.headers,
+                statusCode: statusCode,
+                responseHeader: header,
+                responseBody: body
+            }
+        })
+    });
 });
 
+io.on("connection", function(_socket){
+    console.log("a user connnected.");
 
+    socket = _socket;
+
+    _socket.emit("new", {
+        message: "看见你很高兴!!!"
+    })
+
+});
 
 // 注册hosts接口
 app.use("/api/hosts", hosts);
 
-app.listen(8000);
+http.listen(8000);
+console.log("正在监听8000端口");

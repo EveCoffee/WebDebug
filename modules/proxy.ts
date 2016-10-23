@@ -1,9 +1,12 @@
 import * as http from "http";
 import * as url from "url";
 import * as express from "express";
+import * as request from "request";
 
 import Request = express.Request;
 import Response = express.Response;
+
+var Stream = require("stream").Transform;
 
 interface webConfig {
     /**
@@ -13,47 +16,40 @@ interface webConfig {
     target: string
 };
 
+/**
+ * 响应头
+ */
+type responseHeader = any;
+
+/**
+ * 响应数据
+ */
+type responseBody = any;
+
 export default class Proxy{
 
     constructor(){
 
     }
 
-    static web(req:Request, res: Response, config:webConfig){
-        console.log(req);
+    /**
+     * 代理http类型的web请求
+     */
+    static web(req:Request, res: Response, callback?:(header:responseHeader, statusCode:number, body:responseBody)=>void){
 
         let {protocol, auth, host, pathname, port} = url.parse(req.originalUrl);
         port = port || "80";
 
-        if(protocol === "http:"){
+         if(protocol === "http:"){
 
-            http.get(req.originalUrl, (response) => {
+            var req2 = request({
+                url: req.originalUrl,
+                headers: req.headers
+            }, (error, response, body) => {
+                callback(response.headers, response.statusCode, body);
+            }).pipe(res);
 
-                // res.set(response.headers);
-                // res.send({
-                //     hello: "eereee"
-                // })
-
-                var data:string | Buffer = "";
-
-                response.on("data", (_data) => {
-                    console.log(_data);
-                    // res.send(data);
-
-                    data += <string>_data;
-
-                    
-                });
-
-                response.on("end", (d) => {
-                    console.log(d);
-
-                    res.set(response.headers);
-                    res.send(data);
-                    
-                })
-
-            });
+            // console.log(req2);
 
         }
 
